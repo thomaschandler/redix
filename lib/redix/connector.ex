@@ -42,9 +42,26 @@ defmodule Redix.Connector do
          do: :ok
   end
 
+  defp try_auth(transport, socket, password, timeout) do
+    case sync_command(transport, socket, ["AUTH", password], timeout) do
+      {:ok, "OK"} ->
+        :ok
+
+      {:error,
+       %Redix.Error{
+         message: "ERR Client sent AUTH, but no password is set"
+       }} = err ->
+        Logger.warn(fn -> "Non-fatal connect error: #{inspect(err)}" end)
+        :ok
+
+      other ->
+        other
+    end
+  end
+
   defp maybe_auth(transport, socket, opts, timeout) do
     if password = opts[:password] do
-      with {:ok, "OK"} <- sync_command(transport, socket, ["AUTH", password], timeout), do: :ok
+      try_auth(transport, socket, password, timeout)
     else
       :ok
     end

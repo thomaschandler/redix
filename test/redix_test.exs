@@ -35,6 +35,7 @@ defmodule RedixTest do
       end)
     end
 
+    @tag :skip
     test "specifying a password when no password is set" do
       capture_log(fn ->
         Process.flag(:trap_exit, true)
